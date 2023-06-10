@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background: #f8f8f8;
+        }
+
+        .globalBox {
+            overflow: hidden;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .box {
+            margin-top: 10px;
+            margin-left: 30px;
+            width: 160px;
+        }
+
+        .simge {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            background-color: blueviolet;
+        }
+
+        .view {
+            width: 90px;
+            padding-left: 30px;
+            font-weight: 600;
+            font-size: 18px;
+            color: darkslategray;
+            line-height: 25px;
+        }
+
+        .box i {
+            visibility: hidden;
+            margin-left: 5px;
+            color: #f8f8f8;
+            font-size: 18px;
+        }
+
+        .simge:hover i {
+            visibility: visible;
+        }
+
+        .add-text {
+            width: 120px;
+            height: 22px;
+            font-size: 12px;
+
+        }
+
+        .cursor {
+            cursor: pointer;
+        }
+
+        .add-btn {
+            height: 21px;
+            width: 35px;
+            font-size: 12px;
+            border: 1px solid darkgrey;
+            background-color: darkgrey;
+            text-align: center;
+            margin-top: -8px;
+            color: black;
+        }
+
+        .add-area {
+            margin-top: 5px;
+        }
+
+        .text-container {
+            font-size: 14px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+    <div class="main">
+        <div class="container-fluid">
+            <div class="row" style="height: 100vh;">
+                <div class="col-md-2 globalBox">
+                    <div class="box" style="margin-top: 20px;margin-left: 0px;">
+                        <div class="row" style="height: max-content;">
+                            <div class="col-md-2">
+                                <div class="simge add" data-registration-number="All/">
+                                    <i class="fa-solid fa-plus "></i>
+                                </div>
+                            </div>
+                            <div class="col-md-10">All</div>
+                        </div>
+                        <% Object.entries(folders).forEach(([key, value])=> { %>
+                            <%- include('partials/ped',{key:key,visiple:1,path:""}) %>
+                                <% if (JSON.stringify(value)!='""' ) { %>
+                                    <% Object.entries(value).forEach(([key2, value2])=> { %>
+                                        <%- include('partials/ped',{key:key2,visiple:0,path:key}) %>
+                    </div>
+                    <% }); %>
+                        <% } %>
+                </div>
+                <% }); %>
+            </div>
+        </div>
+        <div class="col-md-3 globalBox remove texts-titles">
+
+
+        </div>
+        <div class="col-md-7 globalBox remove text-Area"></div>
+    </div>
+    </div>
+    </div>
+    <script>
+        var registrationNumber;
+        $(document).ready(function () {
+            var previousElement = null;
+            $('.add').click(function () {
+                if (previousElement !== null) {
+                    $(previousElement).remove();
+                }   
+                registrationNumber=$(this).data('registration-number');
+                previousElement = $(this).parent().parent().append('<div class="col-md-12 new-element"><table ><tr><td><input type="text" id="new-folder" class="add-text"/></td><td><button class="add-btn" onclick="setFolder()">Add</button></td></tr></table></div>').find('.new-element')[0];
+                previousElement.focus();
+            });
+            $('.remove').click(function () {
+                if (previousElement !== null) {
+                    $(previousElement).remove();
+                }
+            });
+        });0
+        function makeRequest(param) {
+            var requestData = {
+                name: 'John Doe',
+                email: 'johndoe@example.com'    
+            };
+            $.ajax({
+                url: 'http://localhost:3000/data',
+                method: 'POST',
+                data: { param: param },
+                success: function (response) {
+                    if(response.Texts!=null){
+                        response.Texts.forEach(elementText => {
+                        if (elementText != null) {
+                            var html = '<div class="row"><div class="col-md-12"  onclick="getAndSetText(this)"><div><h5>' + elementText.title + '</h5></div><div class="text-container"><p>' + elementText.text + '</p></div></div></div>';
+                            $('.texts-titles').append(html);
+                        }
+                    })
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        }
+        function getAndSetText(element) {
+            var textContainer = $(element).find('.text-container');
+            var text = textContainer.text();
+            $('.text-Area').text(text);
+        }
+        makeRequest('<% if (endTexts) { %><%= endTexts %><% } %>');
+        function setFolder(){
+            var name= $('#new-folder').val();
+            $.ajax({
+                url: 'http://localhost:3000/addFolder',
+                method: 'POST',
+                data: 
+                { 
+                    name:name,
+                    address: registrationNumber
+                    
+                },
+                success: function (response) {
+                    console.log(response);
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        }
+
+        /*const eventSource = new EventSource("/sse");
+        eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("Güncel veriler:", data);
+        // Sayfa güncelleme işlemleri burada yapılabilir
+        };*/
+    </script>
+
+</body>
+
+</html>

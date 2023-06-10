@@ -1,0 +1,19 @@
+<div class="box" style="margin-top: 20px;">
+    <div class="row" style="height: max-content;">
+        <div class="col-md-2">
+            <% if (visiple==1) { %>
+                <div class="simge add" data-registration-number="All/<%= path+"/"+key %>"> 
+                <i class="fa-solid fa-plus "></i>
+            
+            <% } else { %>
+                <div class="simge"> 
+            <% } %>
+            
+            </div>
+        </div>
+        <% if (path!="") { %>
+            <div class="col-md-10 cursor"><div data-registration-number="All/<%= path+"/"+key %>"  onclick="makeRequest($(this).data('registration-number'))"><%= key %></div> </div> 
+        <% } else { %>
+            <div class="col-md-10"><%= key %></div> 
+        <% } %>
+    </div>

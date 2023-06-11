@@ -18,19 +18,23 @@ app.use(session({
 const connection = require("./connection.js");
 const signupAndLogin = require("./signupAndLogin.js");
 const status = require("./NTSTATUS.js");
+const model = require("./models.js");
 //------------------------------------------------------------------- API İSTEKLERİ
 var lastOpenTest;
 app.post("/addFolder", (req, res) => {
-    connection.setAddFolder(req.body).then((data) => {
-        res.send(data);
+    model.folderView(req.body).then((html)=>{
+        res.send(html);
+    }).catch(()=>{
+        res.send("memet4");//res.send(status.unsuccessful);
     });
 });
+//-------------------------------------------------------------------
 app.post("/addfile", (req, res) => {
     connection.setAddFile(req.body.param).then((data) => {
         res.send(data);
     });
 });
-
+//-------------------------------------------------------------------
 app.post("/data", (req, res) => {
     lastOpenTest=req.body.param;
     connection.getTexts(req.body.param).then((data) => {
@@ -89,7 +93,7 @@ app.use("/", (req, res) => {
         else{
             res.redirect("login");
         }*/
-});
+    });
 
 });
 //-------------------------------------------------------------------

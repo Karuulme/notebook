@@ -103,7 +103,7 @@
                     <div class="box" style="margin-top: 20px;margin-left: 0px;">
                         <div class="row" style="height: max-content;">
                             <div class="col-md-2">
-                                <div class="simge add" data-registration-number="All/">
+                                <div class="simge add" data-registration-number="All">
                                     <i class="fa-solid fa-plus "></i>
                                 </div>
                             </div>
@@ -122,22 +122,30 @@
             </div>
         </div>
         <div class="col-md-3 globalBox remove texts-titles">
+            
+        </div>
+        <div class="col-md-7 globalBox remove text-Area">
+            <div class="test-ortami">
 
+            </div>
 
         </div>
-        <div class="col-md-7 globalBox remove text-Area"></div>
     </div>
     </div>
     </div>
     <script>
+        var clickedHtml;
         var registrationNumber;
+        var previousElement = null;
         $(document).ready(function () {
-            var previousElement = null;
-            $('.add').click(function () {
+            
+            
+            $(document).on('click', '.add', function() {
                 if (previousElement !== null) {
                     $(previousElement).remove();
-                }   
-                registrationNumber=$(this).data('registration-number');
+                }
+                clickedHtml=$(this).parent().parent();
+                registrationNumber = $(this).data('registration-number');
                 previousElement = $(this).parent().parent().append('<div class="col-md-12 new-element"><table ><tr><td><input type="text" id="new-folder" class="add-text"/></td><td><button class="add-btn" onclick="setFolder()">Add</button></td></tr></table></div>').find('.new-element')[0];
                 previousElement.focus();
             });
@@ -146,24 +154,24 @@
                     $(previousElement).remove();
                 }
             });
-        });0
+        });
         function makeRequest(param) {
             var requestData = {
                 name: 'John Doe',
-                email: 'johndoe@example.com'    
+                email: 'johndoe@example.com'
             };
             $.ajax({
                 url: 'http://localhost:3000/data',
                 method: 'POST',
                 data: { param: param },
                 success: function (response) {
-                    if(response.Texts!=null){
+                    if (response.Texts != null) {
                         response.Texts.forEach(elementText => {
-                        if (elementText != null) {
-                            var html = '<div class="row"><div class="col-md-12"  onclick="getAndSetText(this)"><div><h5>' + elementText.title + '</h5></div><div class="text-container"><p>' + elementText.text + '</p></div></div></div>';
-                            $('.texts-titles').append(html);
-                        }
-                    })
+                            if (elementText != null) {
+                                var html = '<div class="row"><div class="col-md-12"  onclick="getAndSetText(this)"><div><h5>' + elementText.title + '</h5></div><div class="text-container"><p>' + elementText.text + '</p></div></div></div>';
+                                $('.texts-titles').append(html);
+                            }
+                        })
                     }
                 },
                 error: function (error) {
@@ -177,26 +185,29 @@
             $('.text-Area').text(text);
         }
         makeRequest('<% if (endTexts) { %><%= endTexts %><% } %>');
-        function setFolder(){
-            var name= $('#new-folder').val();
+        function setFolder() {
+            var name = $('#new-folder').val();
             $.ajax({
                 url: 'http://localhost:3000/addFolder',
                 method: 'POST',
-                data: 
-                { 
-                    name:name,
+                data:
+                {
+                    name: name,
                     address: registrationNumber
-                    
                 },
                 success: function (response) {
-                    console.log(response);
+                    if(response!="unsuccessful"){
+                    if (previousElement !== null) {
+                        $(previousElement).remove();
+                    }
+                    $(clickedHtml).append(response);
+                    }
                 },
-                error: function (error) {
-                    console.error(error);
-                }
+        error: function (error) {
+            console.error(error);
+        }
             });
         }
-
         /*const eventSource = new EventSource("/sse");
         eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);

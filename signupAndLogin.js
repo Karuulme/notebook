@@ -4,6 +4,7 @@ const authentication = getAuth();
 
 var signupAndLoginClass = {
     uid:null,
+    email:null,
     email: status.success,
     password: status.success,
     success: status.success
@@ -41,13 +42,13 @@ function Signup(param) {
         });
     return signupAndLoginClass;
 }
-
-function Login(param) {
+const Login = async (param) => {
     const email = param.email;
     const password = param.password;
-    signInWithEmailAndPassword(authentication,email, password)
+    await signInWithEmailAndPassword(authentication,email, password)
     .then(userCredential => {
-        signupAndLoginClass.uid=userCredential.uid;
+        signupAndLoginClass.uid=userCredential["user"]["uid"];
+        signupAndLoginClass.email=userCredential["user"]["reloadUserInfo"]["email"];
         signupAndLoginClass.status=status.success;
     })
     .catch(error => {

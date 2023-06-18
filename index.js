@@ -25,37 +25,52 @@ app.post("/addFolder", (req, res) => {
     model.folderView(req.body).then((html)=>{
         res.send(html);
     }).catch(()=>{
-        res.send("memet4");//res.send(status.unsuccessful);
+        res.send(status.unsuccessful);//res.send(status.unsuccessful);
     });
 });
 //-------------------------------------------------------------------
 app.post("/addfile", (req, res) => {
-    connection.setAddFile(req.body.param).then((data) => {
+    if(req.body.name!=null && lastOpenTest!=null && lastOpenTest && req.body.name && req.body.name.length!=0 && req.body.name.length<30  ){
+        connection.setAddFile(req.body.name,lastOpenTest).then((result) => {
+            res.send(result);
+        });
+    }
+    else{
+        res.send(status.unsuccessful);
+    }
+});
+//------------------------------------------------------------------- // yeni dosya eklediğmiizde bir sorun var tıklanmıoyr.
+app.post("/data", (req, res) => {
+    connection.getTexts(req.body.param).then((data) => {
+        lastOpenTest=req.body.param;
         res.send(data);
     });
 });
-//-------------------------------------------------------------------
-app.post("/data", (req, res) => {
-    lastOpenTest=req.body.param;
-    connection.getTexts(req.body.param).then((data) => {
-        res.send(data);
+app.post("/save", (req, res) => {
+    console.log(lastOpenTest);
+    connection.setUpdateNewTex(req.body.address,req.body.text,lastOpenTest).then((result)=>{
+        res.send(result);
+    }).catch(()=>{
+        res.send(status.unsuccessful);
     });
 });
 //-------------------------------------------------------------------
 app.post("/login", (req, res) => {
-    var returnLogin=signupAndLogin.Login(req.body);
-    if(returnLogin.success==status.success){
-        req.session.authenticated=true;
-        req.session.use=returnLogin.uid;
-        res.redirect("/");
-    }
-    else{
-        res.render("login",login=status.unsuccessful);
-    }
+    signupAndLogin.Login(req.body).then((returnLogin)=>{
+        if(returnLogin.success==status.success){
+            req.session.authenticated=true;
+            req.session.use={uid:returnLogin.uid,email:returnLogin.email};
+            res.redirect("/");
+        }
+        else{
+            res.render("login",login=status.unsuccessful);
+        }
+    });
+
 });
 //-------------------------------------------------------------------
 app.use("/login", (req, res) => {
-    if(req.session.authenticated) {   
+    if(req.session.authenticated==true) {   
         res.redirect("/");
     }
     else{
@@ -86,13 +101,13 @@ app.post("/signup", (req, res) => {
 //-------------------------------------------------------------------
 app.use("/", (req, res) => {
     connection.fetchData().then((data) => {
-        res.render("index",{folders:data,endTexts:lastOpenTest});
-       /* if(req.session.authenticated) {   
-            res.render("index",{folders:data});
+        //res.render("index",{folders:data,endTexts:lastOpenTest});
+        if(req.session.authenticated) {   
+            res.render("index",{folders:data,email:req.session.use.email,endTexts:lastOpenTest});
         }
         else{
             res.redirect("login");
-        }*/
+        }
     });
 
 });

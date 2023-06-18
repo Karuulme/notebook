@@ -12,7 +12,7 @@
             </div>
         </div>
         <% if (path!="") { %>
-            <div class="col-md-10 cursor"><div data-registration-number="All<%= path+"/"+key %>"  onclick="makeRequest($(this).data('registration-number'))"><%= key %></div> </div> 
+            <div class="col-md-10 cursor"><div data-registration-number="<%= path+"/"+key %>"  onclick="makeRequest($(this).data('registration-number'))"><%= key %></div> </div> 
         <% } else { %>
             <div class="col-md-10"><%= key %></div> 
         <% } %>

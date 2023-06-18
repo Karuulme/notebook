@@ -9,6 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/38.0.1/classic/ckeditor.js"></script>
+    <script src="https://kit.fontawesome.com/eb8cd001db.js" crossorigin="anonymous"></script>
     <style>
         body {
             padding: 0;
@@ -89,6 +91,47 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        #editorContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            overflow: hidden;
+        }
+        .ck-editor__editable {
+            height: calc(85vh); /* 20px olan alttaki içerik (bottomContent) yüksekliğini çıkartın */
+            overflow-y: auto;
+        }
+
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            66% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        /* Div için stil tanımla */
+        .savedButtonAlert {
+            /* Animasyonu uygula */
+            animation-name: fadeOut;
+            /* Animasyon süresi 3 saniye */
+            animation-duration: 3s;
+            /* Animasyon tamamlandığında div'i görünmez yap */
+            animation-fill-mode: forwards;
+            /* Div'e başlangıçta bazı stiller ekleyin (isteğe bağlı) */
+        }
+        .savedStatus{
+            height: 25px;
+        }
+        .titles-Address{
+            font-size: 16px;
+            font-weight: 600;
+        }
     </style>
 
 </head>
@@ -121,14 +164,38 @@
                 <% }); %>
             </div>
         </div>
-        <div class="col-md-3 globalBox remove texts-titles">
-            
+        <div class="col-md-3 globalBox remove ">
+            <div class="row" style="margin-top: 20px;margin-bottom: 10px;">
+                <div class="col-md-9" ><h5 style="padding: 6px;">Create a new text document</h5></div>
+                <div class="col-md-3" style="padding:0;"><button type="button" class="btn btn-outline-secondary title-Create">Create</button></div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control title-input" id="floatingInput"  placeholder="Title">
+                <label for="floatingInput">Title</label>
+            </div>
+            <div class="titles-Address"></div>
+            <div class="texts-titles">
+            </div>
+            <div id="fadingDiv">
+            </div>
         </div>
         <div class="col-md-7 globalBox remove text-Area">
-            <div class="test-ortami">
-
+            <nav class="navbar bg-body-tertiary">
+                <div class="container-fluid">
+                    <a class="navbar-brand"><%= email %>
+                    </a>
+                    <div>
+                    <button type="button" class="btn btn-success" style="margin: 10px;" onclick="setUpdateNewText()">Save</button>
+                    
+                    <button type="button" class="btn btn-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                </div>
+                </div>
+            </nav>
+            <div class="savedStatus">
+                
             </div>
-
+            
+            <div id="editor"></div>            
         </div>
     </div>
     </div>
@@ -137,9 +204,17 @@
         var clickedHtml;
         var registrationNumber;
         var previousElement = null;
+        var editor = null;
+        var openLastText;
+        ClassicEditor
+            .create(document.querySelector('#editor'))
+            .then(instance => {
+                editor = instance;
+            })
+            .catch(error => {
+                console.error(error);
+            });
         $(document).ready(function () {
-            
-            
             $(document).on('click', '.add', function() {
                 if (previousElement !== null) {
                     $(previousElement).remove();
@@ -154,24 +229,39 @@
                     $(previousElement).remove();
                 }
             });
+            $(".title-Create").click(function() {
+                var folderTitleName=$('.title-input').val();
+                $.ajax({
+                    url: 'http://localhost:3000/addfile',
+                    method: 'POST',
+                    data: { name: folderTitleName },
+                    success: function (response) {
+                        if (response !="unsuccessful" ) {
+                            var html = '<div class="row"><div class="col-md-12" data-registration-number="'+response+'"  onclick="getAndSetText(this)"><div><h5>' + folderTitleName + '</h5></div><div class="text-container"><p></p></div></div></div> <hr>';
+                            $('.texts-titles').append(html);
+                        }
+                    },
+                    error: function (error) {
+                        console.error(error);
+                    }
+                });
+                $('.title-input').val("");
+            });
         });
-        function makeRequest(param) {
-            var requestData = {
-                name: 'John Doe',
-                email: 'johndoe@example.com'
-            };
+        function makeRequest(param) {            
             $.ajax({
                 url: 'http://localhost:3000/data',
                 method: 'POST',
                 data: { param: param },
                 success: function (response) {
-                    if (response.Texts != null) {
-                        response.Texts.forEach(elementText => {
-                            if (elementText != null) {
-                                var html = '<div class="row"><div class="col-md-12"  onclick="getAndSetText(this)"><div><h5>' + elementText.title + '</h5></div><div class="text-container"><p>' + elementText.text + '</p></div></div></div>';
-                                $('.texts-titles').append(html);
-                            }
-                        })
+                    $('.titles-Address').html(param);
+                    $('.texts-titles').text("");
+                    var textList=response.Texts;
+                    for (const key in textList) {
+                        const value = textList[key];
+                        var html = '<div class="row" ><div class="col-md-12" data-registration-number="'+key+'"  onclick="getAndSetText(this)"><div><h5>' + value.title + '</h5></div><div class="text-container">' + value.text + '</div></div></div> <hr>';
+                        $('.texts-titles').append(html);
+                        $('.titles-Address').html(param);
                     }
                 },
                 error: function (error) {
@@ -180,9 +270,36 @@
             });
         }
         function getAndSetText(element) {
+            
+            openLastText=$(element).data('registration-number');
+
             var textContainer = $(element).find('.text-container');
-            var text = textContainer.text();
-            $('.text-Area').text(text);
+            var text = textContainer.html();
+            if (editor) {
+                editor.setData(text);
+            }
+        }
+        function setUpdateNewText() {
+            //openLastText
+            var text= editor.getData();
+            $.ajax({
+                url: 'http://localhost:3000/save',
+                method: 'POST',
+                data:
+                {
+                    address:openLastText,
+                    text:text
+                },
+                success: function (response) {
+                    if(response=="success"){
+                        $(".savedStatus").html('<div class="savedButtonAlert"><h5 style="font-size: 14px;margin-left: 10px;color: #23871e;">SUCCESSFULLY SAVED</h5></div>');
+                        $('div[data-registration-number="'+openLastText+'"]').find(".text-container").html(text);
+                    }
+                },
+            error: function (error) {
+                console.error(error);
+                }
+            });
         }
         makeRequest('<% if (endTexts) { %><%= endTexts %><% } %>');
         function setFolder() {
@@ -206,16 +323,9 @@
         error: function (error) {
             console.error(error);
         }
-            });
+        });
         }
-        /*const eventSource = new EventSource("/sse");
-        eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log("Güncel veriler:", data);
-        // Sayfa güncelleme işlemleri burada yapılabilir
-        };*/
     </script>
-
 </body>
 
 </html>
